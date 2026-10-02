@@ -1,8 +1,38 @@
+import { useState } from 'react';
+
+const API_URL = 'http://localhost:3000/api';
+
 function ContactForm() {
-  function handleSubmit(e) {
+  const [sending, setSending] = useState(false);
+
+  async function handleSubmit(e) {
     e.preventDefault();
-    alert('Заявка отправлена! Мы свяжемся с вами.');
-    e.target.reset();
+    const form = e.target;
+    const data = Object.fromEntries(new FormData(form));
+
+    setSending(true);
+
+    try {
+      const res = await fetch(`${API_URL}/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        alert('Ошибка: ' + result.error);
+        return;
+      }
+
+      alert(`Заявка №${result.id} успешно принята!`);
+      form.reset();
+    } catch (err) {
+      alert('Сервер недоступен. Проверьте запуск agromarket-server.');
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -14,44 +44,23 @@ function ContactForm() {
         <input id="name" name="name" type="text" required />
 
         <label htmlFor="email">Email</label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          required
-          placeholder="farmer@mail.kz"
-        />
+        <input id="email" name="email" type="email" required placeholder="farmer@mail.kz" />
 
         <label htmlFor="phone">Телефон</label>
-        <input
-          id="phone"
-          name="phone"
-          type="tel"
-          required
-          placeholder="+7 7XX XXX XX XX"
-        />
+        <input id="phone" name="phone" type="tel" required placeholder="+7 7XX XXX XX XX" />
 
         <label htmlFor="quantity">Объём заказа (кг)</label>
-        <input
-          id="quantity"
-          name="quantity"
-          type="number"
-          min="10"
-          required
-        />
+        <input id="quantity" name="quantity" type="number" min="10" required />
 
         <label htmlFor="deliveryDate">Желаемая дата доставки</label>
-        <input
-          id="deliveryDate"
-          name="deliveryDate"
-          type="date"
-          required
-        />
+        <input id="deliveryDate" name="deliveryDate" type="date" required />
 
         <label htmlFor="comment">Комментарий</label>
         <textarea id="comment" name="comment" rows="4" />
 
-        <button type="submit">Отправить заявку</button>
+        <button type="submit" disabled={sending}>
+          {sending ? 'Отправка...' : 'Отправить заявку'}
+        </button>
       </form>
     </section>
   );

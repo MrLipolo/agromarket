@@ -10,12 +10,13 @@ function App() {
   const [cartCount, setCartCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const API_URL = 'http://localhost:3000/api';
 
   useEffect(() => {
     async function loadProducts() {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:3001/products');
+        const response = await fetch(`${API_URL}/products`);
 
         if (!response.ok) {
           throw new Error(`Ошибка HTTP: ${response.status}`);
