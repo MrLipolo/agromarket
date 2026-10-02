@@ -1,16 +1,23 @@
-# React + Vite
+# Лабораторная работа №4 — Вёрстка «АгроМаркета»
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 1. Box model карточки (часть 1)
+- **content**: 200px × 260px
+- **padding**: 16px
+- **border**: 1px
+- **margin**: 0px
+- **Результат с `box-sizing: border-box`**: общая ширина карточки фиксируется на заявленном значении, так как внутренние отступы (padding) и рамка (border) включаются внутрь элемента, а не увеличивают его наружный размер.
 
-Currently, two official plugins are available:
+## 2. Сетка `repeat(4, 1fr)` на узком экране (часть 4)
+При сжатии окна до ~500px с фиксированным правилом `repeat(4, 1fr)` карточки сжимаются в очень узкие полоски, текст перекрывается, а интерфейс начинает выходить за края экрана, создавая горизонтальный скролл.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 3. Сравнение `auto-fit` и `auto-fill` (часть 4)
+- **`auto-fit`**: растягивает имеющиеся карточки на всю доступную ширину контейнера, схлопывая пустые колонки.
+- **`auto-fill`**: удерживает структуру и оставляет пустые места под еще не добавленные колонки.
 
-## React Compiler
+## 4. Адаптивность (часть 5)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+| Ширина | Колонок в каталоге | Где «Доставка» | Шапка: ряд/столбик |
+|--------|--------------------|----------------|--------------------|
+| 375 px | 1                  | Под каталогом  | Столбик            |
+| 768 px | 2–3                | Под каталогом  | Ряд                |
+| 1280 px| 4                  | Справа (1fr)   | Ряд                |
