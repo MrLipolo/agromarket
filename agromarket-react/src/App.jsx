@@ -1,101 +1,112 @@
 import { useState, useEffect } from 'react';
-import Header from './components/Header';
-import Footer from './components/Footer';
-import ProductCard from './components/ProductCard';
-import ContactForm from './components/ContactForm';
+import { apiFetch } from './api.js';
+import LoginForm from './components/LoginForm.jsx';
+import AddProductForm from './components/AddProductForm.jsx';
+import ProductCard from './components/ProductCard.jsx';
+import ContactForm from './components/ContactForm.jsx';
 
-function App() {
+export default function App() {
   const [products, setProducts] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [cartCount, setCartCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const API_URL = 'http://localhost:3000/api';
+  const [search, setSearch] = useState('');
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user') || 'null'));
 
+  // Загрузка товаров и проверка токена при запуске приложения
   useEffect(() => {
-    async function loadProducts() {
-      try {
-        setLoading(true);
-        const response = await fetch(`${API_URL}/products`);
+    // 1. Загружаем каталог товаров из API
+    apiFetch('/products')
+      .then((data) => setProducts(data))
+      .catch((err) => console.error('Ошибка загрузки товаров:', err));
 
-        if (!response.ok) {
-          throw new Error(`Ошибка HTTP: ${response.status}`);
-        }
-
-        const data = await response.json();
-        setProducts(data);
-        setError(null);
-      } catch (err) {
-        setError('Не удалось загрузить товары. Проверьте, запущен ли json-server.');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+    // 2. Проверяем валидность сохраненного токена
+    if (localStorage.getItem('token')) {
+      apiFetch('/auth/me')
+        .then((userData) => setUser(userData))
+        .catch(() => {
+          // Если токен недействителен, apiFetch сам очистит localStorage
+        });
     }
-
-    loadProducts();
   }, []);
 
-  const handleAddToCart = () => {
-    setCartCount(cartCount + 1);
-  };
+  function handleLogin(user, token) {
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+    setUser(user);
+  }
 
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase())
+  function handleLogout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+  }
+
+  // Фильтрация товаров по поисковому запросу
+  const filteredProducts = products.filter((p) =>
+    p.name.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <>
-      <Header cartCount={cartCount} />
-
-      <main className="page">
-        <section id="catalog" className="catalog">
-          <div className="catalog-toolbar">
-            <h2>Каталог</h2>
-            <input
-              type="search"
-              placeholder="Поиск товара..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+    <div className="app-container">
+      <header className="header">
+        <div className="header-content">
+          <h1>🌾 АгроМаркет</h1>
+          <div className="auth-bar">
+            {user ? (
+              <div className="user-info">
+                <span>Вы вошли как <b>{user.name}</b> ({user.role})</span>{' '}
+                <button onClick={handleLogout} className="btn-logout">Выйти</button>
+              </div>
+            ) : (
+              <LoginForm onLogin={handleLogin} />
+            )}
           </div>
+        </div>
+      </header>
 
-          {loading && <p>Загрузка товаров...</p>}
-          {error && <p style={{ color: 'red', fontWeight: 'bold' }}>{error}</p>}
-
-          {!loading && !error && (
-            <div className="product-grid">
-              {filteredProducts.length > 0 ? (
-                filteredProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onAdd={handleAddToCart}
-                    featured={product.id === 1}
-                  />
-                ))
-              ) : (
-                <p>Товары не найдены</p>
-              )}
-            </div>
-          )}
+      <main className="main-content">
+        {/* Поиск по каталогу */}
+        <section className="search-section">
+          <input
+            type="text"
+            placeholder="Поиск товаров..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="search-input"
+          />
         </section>
 
-        <aside id="delivery" className="sidebar">
-          <h3>Доставка</h3>
-          <ul>
-            <li>Астана — на следующий день</li>
-            <li>Акмолинская область — 2–3 дня</li>
-            <li>Бесплатно от 20 000 тг</li>
-          </ul>
-        </aside>
+        {/* Форма добавления товара (только для Администратора) */}
+        {user?.role === 'admin' && (
+          <section className="admin-section">
+            <AddProductForm onAdded={(newProduct) => setProducts([...products, newProduct])} />
+          </section>
+        )}
 
-        <ContactForm />
+        {/* Каталог продукции */}
+        <section className="catalog-section">
+          <h2>Каталог продукции</h2>
+          <div className="products-grid">
+            {filteredProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onSelect={(p) => setSelectedProduct(p)}
+              />
+            ))}
+          </div>
+          {filteredProducts.length === 0 && <p>Товары не найдены</p>}
+        </section>
+
+        {/* Форма заявки */}
+        <section className="order-section">
+          <h2>Оформить заявку</h2>
+          <ContactForm selectedProduct={selectedProduct} />
+        </section>
       </main>
 
-      <Footer />
-    </>
+      <footer className="footer">
+        <p>© 2026 АгроМаркет — Поставки сельхозпродукции</p>
+      </footer>
+    </div>
   );
 }
-
-export default App;
