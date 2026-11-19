@@ -49,7 +49,7 @@ export default function App() {
     <div className="app-container">
       <header className="header">
         <div className="header-content">
-          <h1>СЛОМАНО</h1>
+          <h1>🌾 АгроМаркет</h1>
           <div className="auth-bar">
             {user ? (
               <div className="user-info">
