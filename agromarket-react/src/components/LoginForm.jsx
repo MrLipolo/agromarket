@@ -4,11 +4,13 @@ import { apiFetch } from '../api.js';
 export default function LoginForm({ onLogin }) {
   const [mode, setMode] = useState('login'); // 'login' или 'register'
   const [error, setError] = useState('');
+  const [details, setDetails] = useState([]);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    setDetails([]);
     setLoading(true);
     const data = Object.fromEntries(new FormData(e.target));
 
@@ -20,6 +22,7 @@ export default function LoginForm({ onLogin }) {
       onLogin(result.user, result.token);
     } catch (err) {
       setError(err.message);
+      setDetails(err.details || []);
     } finally {
       setLoading(false);
     }
@@ -36,6 +39,7 @@ export default function LoginForm({ onLogin }) {
       <input name="password" type="password" placeholder="Пароль (от 8 символов)" required minLength={8} />
 
       {error && <p className="error" style={{ color: 'red' }}>{error}</p>}
+      {details.length > 0 && <ul className="error-details" role="alert">{details.map((item, index) => <li key={`${item.field}-${index}`}>{item.field}: {item.message}</li>)}</ul>}
 
       <button type="submit" disabled={loading}>
         {loading ? 'Подождите…' : isLogin ? 'Войти' : 'Зарегистрироваться'}
