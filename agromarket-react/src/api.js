@@ -9,7 +9,7 @@ export async function apiFetch(path, options = {}) {
   }
 
   const res = await fetch(`${API_URL}${path}`, { ...options, headers });
-  const data = res.status === 204 ? null : await res.json();
+  const data = res.status === 204 ? null : await res.json().catch(() => null);
 
   // Если токен истёк или подделан — очищаем хранилище и перезагружаем
   if (res.status === 401 && token) {
@@ -19,7 +19,9 @@ export async function apiFetch(path, options = {}) {
   }
 
   if (!res.ok) {
-    throw new Error(data?.error || `Ошибка ${res.status}`);
+    const err = new Error(data?.error || `Ошибка ${res.status}`);
+    err.details = data?.details || [];
+    throw err;
   }
   return data;
 }
